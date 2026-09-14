@@ -1,0 +1,2079 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>SmartSort Paper Pro — Grado 10-01</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --surface: rgba(18, 20, 29, 0.88);
+      --surface-elevated: rgba(26, 29, 41, 0.94);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-highlight: rgba(244, 114, 182, 0.35);
+      
+      /* Industrial Powder-Coated Rose & Champagne Palette */
+      --rose: #f472b6;
+      --rose-dark: #be185d;
+      --rose-light: #fbcfe8;
+      --rose-matte: #e88b9c;
+      --champagne: #e2d9d0;
+      --champagne-light: #fdfbf7;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --success: #34d399;
+      --warning: #fbbf24;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      overflow: hidden;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0b0c10;
+      color: var(--text);
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+    }
+
+    #webgl-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      touch-action: none;
+    }
+
+    .ui-layer {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .interactive {
+      pointer-events: auto;
+    }
+
+    /* =========================================================================
+       TOP HEADER & NAVIGATION
+       ========================================================================= */
+    header {
+      top: 14px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 9999px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--rose);
+      box-shadow: 0 0 10px var(--rose);
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.35); opacity: 1; box-shadow: 0 0 14px var(--rose); }
+    }
+
+    .brand-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .brand-title span {
+      color: var(--rose);
+      font-weight: 800;
+    }
+
+    .badge-grade {
+      background: rgba(244, 114, 182, 0.15);
+      border: 1px solid rgba(244, 114, 182, 0.35);
+      color: var(--rose-light);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-glass-pill {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      color: #e2e8f0;
+      padding: 8px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-glass-pill:hover, .btn-glass-pill:active {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(244, 114, 182, 0.4);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .btn-glass-pill.highlight {
+      background: rgba(244, 114, 182, 0.15);
+      border-color: rgba(244, 114, 182, 0.45);
+      color: var(--rose-light);
+    }
+
+    /* Pipeline Step Tracker */
+    .pipeline-bar {
+      top: 68px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 9999px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      max-width: 92vw;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .pipeline-bar::-webkit-scrollbar { display: none; }
+
+    .p-node {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 4px 8px;
+      border-radius: 20px;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+    .p-node.active {
+      background: rgba(244, 114, 182, 0.18);
+      color: #fff;
+      border: 1px solid var(--rose);
+    }
+    .p-arrow {
+      color: rgba(255,255,255,0.2);
+      font-size: 9px;
+    }
+
+    /* =========================================================================
+       DESKTOP FLOATING PANELS
+       ========================================================================= */
+    .panel-left {
+      top: 118px;
+      left: 20px;
+      width: 230px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card {
+      background: var(--surface);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px 16px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .card-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-quiet {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      color: #e2e8f0;
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-quiet:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .btn-quiet.active {
+      background: rgba(244, 114, 182, 0.15);
+      border-color: var(--rose);
+      color: #fff;
+    }
+    .btn-quiet .icon-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* Right Action Deck */
+    .panel-right {
+      top: 118px;
+      right: 20px;
+      width: 350px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .action-card {
+      background: #12151f;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: left;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    .action-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+    }
+    .action-card:active {
+      transform: scale(0.98);
+    }
+
+    .action-card.wet {
+      border-color: rgba(244, 114, 182, 0.35);
+      background: linear-gradient(135deg, rgba(190, 24, 93, 0.15), #12151f);
+    }
+    .action-card.wet:hover {
+      border-color: var(--rose);
+      box-shadow: 0 0 24px rgba(244, 114, 182, 0.25);
+    }
+
+    .action-card.dry {
+      border-color: rgba(226, 217, 208, 0.3);
+      background: linear-gradient(135deg, rgba(226, 217, 208, 0.1), #12151f);
+    }
+    .action-card.dry:hover {
+      border-color: var(--champagne);
+      box-shadow: 0 0 24px rgba(226, 217, 208, 0.2);
+    }
+
+    .badge-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 9px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+    }
+    .action-card.wet .badge-code {
+      background: rgba(244, 114, 182, 0.2);
+      color: var(--rose-light);
+    }
+    .action-card.dry .badge-code {
+      background: rgba(226, 217, 208, 0.18);
+      color: var(--champagne);
+    }
+
+    .action-details { flex: 1; }
+    .action-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+    .action-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    .action-tools-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .btn-action-tool {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+      padding: 8px 6px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .btn-action-tool:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .btn-action-tool:active {
+      transform: scale(0.96);
+    }
+    .btn-action-tool.highlight {
+      border-color: rgba(244, 114, 182, 0.4);
+      color: var(--rose-light);
+    }
+    .btn-action-tool.danger {
+      border-color: rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+    }
+
+    .science-card {
+      font-size: 11.5px;
+      line-height: 1.5;
+      color: #cbd5e1;
+    }
+    .science-card strong {
+      color: #fff;
+    }
+
+    /* Bottom Dock (Telemetry, Counters, Narration) */
+    .dock-bottom {
+      bottom: 16px;
+      left: 20px;
+      width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .tele-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 10px 14px;
+    }
+    .tele-line {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .tele-label {
+      font-size: 9.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .tele-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .narration-box {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+    .narration-tag {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--rose);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .narration-text {
+      font-size: 12px;
+      color: #e2e8f0;
+      line-height: 1.45;
+    }
+
+    .counter-dual {
+      display: flex;
+      gap: 8px;
+    }
+    .counter-item {
+      flex: 1;
+      background: rgba(18, 20, 29, 0.75);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+    }
+    .counter-item.wet { border-color: rgba(244, 114, 182, 0.3); }
+    .counter-item.dry { border-color: rgba(226, 217, 208, 0.25); }
+    .counter-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .counter-item.wet .counter-val { color: var(--rose); }
+    .counter-item.dry .counter-val { color: var(--champagne); }
+    .counter-tag {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 1px;
+    }
+
+    /* =========================================================================
+       MOBILE BOTTOM CONTROLLER (App-Style Thumb Deck)
+       ========================================================================= */
+    .mobile-thumb-deck {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(11, 12, 16, 0.94);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+      z-index: 40;
+      box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.6);
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mobile-drawer-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    .drawer-pill-handle {
+      width: 36px;
+      height: 4px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 2px;
+      margin: 0 auto;
+    }
+
+    .mobile-action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mobile-btn-action {
+      background: #151824;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .mobile-btn-action:active {
+      transform: scale(0.96);
+    }
+    .mobile-btn-action.wet {
+      border-color: rgba(244, 114, 182, 0.4);
+      background: linear-gradient(135deg, rgba(190, 24, 93, 0.22), #151824);
+    }
+    .mobile-btn-action.dry {
+      border-color: rgba(226, 217, 208, 0.35);
+      background: linear-gradient(135deg, rgba(226, 217, 208, 0.16), #151824);
+    }
+    .mobile-btn-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .mobile-btn-action.wet .mobile-btn-badge {
+      background: rgba(244, 114, 182, 0.25);
+      color: var(--rose-light);
+    }
+    .mobile-btn-action.dry .mobile-btn-badge {
+      background: rgba(226, 217, 208, 0.25);
+      color: var(--champagne);
+    }
+    .mobile-btn-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .mobile-btn-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .mobile-sub-actions {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    .mobile-tele-sheet {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      max-height: 48vh;
+      overflow-y: auto;
+    }
+    .mobile-tele-sheet.expanded {
+      display: flex;
+    }
+
+    /* =========================================================================
+       MODALS: TEAM CREDITS & 8K GALLERY
+       ========================================================================= */
+    .app-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 7, 10, 0.88);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      z-index: 120;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .app-modal.show {
+      display: flex;
+    }
+
+    .modal-sheet-content {
+      background: #111420;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 580px;
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+    }
+
+    .btn-close-modal {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: background 0.2s;
+    }
+    .btn-close-modal:hover, .btn-close-modal:active {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    .modal-header-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--rose);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .modal-header-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+    .modal-header-sub {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    /* Team Members Grid */
+    .team-members-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 600px) {
+      .team-members-grid { grid-template-columns: 1fr; }
+    }
+
+    .member-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .member-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(244, 114, 182, 0.2), rgba(226, 217, 208, 0.15));
+      border: 1px solid rgba(244, 114, 182, 0.35);
+      color: var(--rose-light);
+      font-weight: 800;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .member-info { flex: 1; overflow: hidden; }
+    .member-name {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .member-role {
+      font-size: 10px;
+      color: var(--text-muted);
+      line-height: 1.3;
+      margin-top: 1px;
+    }
+
+    .team-footer-box {
+      background: rgba(244, 114, 182, 0.08);
+      border: 1px solid rgba(244, 114, 182, 0.2);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 11.5px;
+      color: #cbd5e1;
+      line-height: 1.45;
+    }
+
+    /* =========================================================================
+       RESPONSIVE BREAKPOINTS (Mobile & Tablet)
+       ========================================================================= */
+    @media (max-width: 900px) {
+      header {
+        top: 10px;
+        left: 12px;
+        right: 12px;
+      }
+      .brand-group {
+        padding: 6px 12px;
+        gap: 8px;
+      }
+      .brand-title { font-size: 12px; }
+      .brand-title span { font-weight: 800; }
+
+      .pipeline-bar {
+        top: 52px;
+        width: 94%;
+        max-width: 94%;
+        padding: 4px 8px;
+      }
+      .p-node { font-size: 9.5px; padding: 3px 6px; }
+
+      /* Hide Desktop Left & Right Panels on Mobile */
+      .panel-left, .panel-right, .dock-bottom {
+        display: none !important;
+      }
+
+      /* Enable Mobile Bottom Thumb Deck */
+      .mobile-thumb-deck {
+        display: flex;
+      }
+
+      /* Mobile Drawer for Cameras (Fullscreen overlay when triggered) */
+      #mobile-cam-sheet {
+        position: fixed;
+        inset: 0;
+        background: rgba(11, 12, 16, 0.95);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        z-index: 100;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      #mobile-cam-sheet.show { display: flex; }
+      #mobile-cam-sheet .card {
+        width: 100%;
+        max-width: 320px;
+      }
+    }
+
+    /* Landscape Mode for Smartphones */
+    @media (max-width: 900px) and (orientation: landscape) {
+      .pipeline-bar { display: none; }
+      .mobile-thumb-deck {
+        top: 0;
+        bottom: 0;
+        right: 0;
+        left: auto;
+        width: 280px;
+        border-top: none;
+        border-left: 1px solid rgba(255,255,255,0.12);
+        border-radius: 0;
+        padding: 14px;
+        justify-content: center;
+      }
+      #webgl-canvas {
+        width: calc(100vw - 280px);
+      }
+    }
+  </style>
+
+  <!-- Three.js & OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+  <!-- Top App Bar -->
+  <header class="ui-layer">
+    <div class="brand-group">
+      <div class="status-dot"></div>
+      <div class="brand-title">SmartSort <span>Paper Pro</span></div>
+      <div class="badge-grade">10-01</div>
+    </div>
+
+    <div class="header-actions interactive">
+      <button class="btn-glass-pill highlight" id="btn-open-team">
+        <span>👥 Equipo</span>
+      </button>
+      <button class="btn-glass-pill" id="btn-open-views">
+        <span>📷 Vistas</span>
+      </button>
+      <button class="btn-glass-pill" id="btn-fullscreen" title="Pantalla Completa">
+        <span>⛶</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Process Stepper -->
+  <div class="ui-layer pipeline-bar">
+    <div class="p-node active" id="nd-1">1. En Reposo</div>
+    <div class="p-arrow">&rarr;</div>
+    <div class="p-node" id="nd-2">2. Recepción</div>
+    <div class="p-arrow">&rarr;</div>
+    <div class="p-node" id="nd-3">3. Test de Fibras</div>
+    <div class="p-arrow">&rarr;</div>
+    <div class="p-node" id="nd-4">4. Desvío Servo</div>
+    <div class="p-arrow">&rarr;</div>
+    <div class="p-node" id="nd-5">5. Almacenado</div>
+  </div>
+
+  <!-- DESKTOP LEFT PANEL: Studio Cameras & Tools -->
+  <div class="ui-layer interactive panel-left">
+    <div class="card">
+      <div class="card-label">
+        <span>Vistas de Estudio</span>
+      </div>
+      <button class="btn-quiet active" data-cam="iso">
+        <span>Perspectiva General</span>
+        <span class="icon-num">01</span>
+      </button>
+      <button class="btn-quiet" data-cam="sensor">
+        <span>Bandeja & Sensor</span>
+        <span class="icon-num">02</span>
+      </button>
+      <button class="btn-quiet" data-cam="doors">
+        <span>Compuertas y Botes</span>
+        <span class="icon-num">03</span>
+      </button>
+      <button class="btn-quiet" data-cam="arduino">
+        <span>Microcontrolador Arduino</span>
+        <span class="icon-num">04</span>
+      </button>
+      <button class="btn-quiet" id="cam-xray-desk">
+        <span>Modo Rayos X (CAD)</span>
+        <span class="icon-num">05</span>
+      </button>
+    </div>
+
+    <!-- Presentation Tools -->
+    <div class="card">
+      <div class="card-label">
+        <span>Sustentación</span>
+      </div>
+      <button class="btn-quiet" id="btn-auto-demo-desk" style="border-color: rgba(244, 114, 182, 0.45); color: var(--rose-light);">
+        <span>▶ Modo Presentación Auto</span>
+      </button>
+      <button class="btn-quiet" id="btn-next-step-desk">
+        <span>Avanzar Paso a Paso &rarr;</span>
+      </button>
+      
+    </div>
+  </div>
+
+  <!-- DESKTOP RIGHT PANEL: Primary Actions -->
+  <div class="ui-layer interactive panel-right">
+    <div class="card">
+      <div class="card-label">
+        <span>Pruebas de Clasificación</span>
+        <span id="sys-status" style="color: var(--rose); font-family: 'JetBrains Mono', monospace;">LISTO</span>
+      </div>
+
+      <!-- Ultrasonic Approach -->
+      <div class="action-card" id="act-approach-desk">
+        <div class="badge-code">00</div>
+        <div class="action-details">
+          <div class="action-title">Sensor Ultrasónico HC-SR04</div>
+          <div class="action-desc">Detecta la mano acercando el papel (&lt; 15 cm).</div>
+        </div>
+      </div>
+
+      <!-- Wet Paper Action -->
+      <div class="action-card wet" id="act-wet-desk">
+        <div class="badge-code">01</div>
+        <div class="action-details">
+          <div class="action-title">Papel Húmedo / Servilleta</div>
+          <div class="action-desc">Fibras con líquido &rarr; Rampa a la Izquierda &rarr; No Reciclable.</div>
+        </div>
+      </div>
+
+      <!-- Dry Paper Action -->
+      <div class="action-card dry" id="act-dry-desk">
+        <div class="badge-code">02</div>
+        <div class="action-details">
+          <div class="action-title">Papel Seco / Hoja Limpia</div>
+          <div class="action-desc">Fibras intactas &rarr; Rampa a la Derecha &rarr; 100% Reciclable.</div>
+        </div>
+      </div>
+
+      <!-- Utility Row -->
+      <div class="action-tools-row">
+        <button class="btn-action-tool danger" id="act-reset-desk">Reset</button>
+        <button class="btn-action-tool highlight" id="act-speed-desk">
+          <span id="spd-label-desk">Velocidad: 1x</span>
+        </button>
+        <button class="btn-action-tool" id="btn-team-inline">Equipo 10-01</button>
+      </div>
+    </div>
+
+    <!-- Science Principles Card -->
+    <div class="card">
+      <div class="card-label">
+        <span>Principio Químico de Separación</span>
+      </div>
+      <div class="science-card">
+        El <strong>papel seco</strong> es un aislante dieléctrico (resistencia &gt; 10 M&Omega;, lectura A0 &lt; 50). Cuando el papel está <strong>húmedo</strong>, el agua rompe los puentes de hidrógeno de la celulosa y sus iones disueltos conducen electricidad (A0 &gt; 350). El Arduino detecta esta caída de impedancia y activa el servomotor a 45° a la izquierda para evitar que contamine el reciclaje limpio.
+      </div>
+    </div>
+  </div>
+
+  <!-- DESKTOP BOTTOM DOCK: Telemetry, Narration & Counters -->
+  <div class="ui-layer interactive dock-bottom">
+    <div class="card tele-grid">
+      <div class="tele-line">
+        <span class="tele-label">Distancia Eco (HC-SR04):</span>
+        <span class="tele-value" id="hud-dist">78 cm</span>
+      </div>
+      <div class="tele-line">
+        <span class="tele-label">Impedancia Fibra (A0):</span>
+        <span class="tele-value" id="hud-moist">18 (Aislante)</span>
+      </div>
+      <div class="tele-line">
+        <span class="tele-label">Ángulo Servomotor SG90:</span>
+        <span class="tele-value" id="hud-servo">90° (Equilibrio)</span>
+      </div>
+    </div>
+
+    <div class="narration-box">
+      <div class="narration-tag" id="narrate-icon">ESTADO GENERAL</div>
+      <div class="narration-text" id="narrate-text">
+        Estación lista en reposo. La rampa de acero inoxidable se encuentra a 90° nivelada y ambas compuertas inferiores permanecen cerradas.
+      </div>
+    </div>
+
+    <div class="counter-dual">
+      <div class="counter-item wet">
+        <div class="counter-val" id="cnt-wet">0</div>
+        <div class="counter-tag">Papel Húmedo (01)</div>
+      </div>
+      <div class="counter-item dry">
+        <div class="counter-val" id="cnt-dry">0</div>
+        <div class="counter-tag">Papel Seco (02)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MOBILE BOTTOM CONTROLLER (Thumb-Optimized Deck)
+       ========================================================================= -->
+  <div class="mobile-thumb-deck interactive">
+    <button class="mobile-drawer-toggle" id="btn-toggle-tele-mobile">
+      <span id="mobile-drawer-label">Ver Telemetría y Sensores</span>
+      <div class="drawer-pill-handle"></div>
+      <span id="mobile-drawer-arrow">&#9650;</span>
+    </button>
+
+    <!-- Primary Quick Sorting Triggers -->
+    <div class="mobile-action-grid">
+      <button class="mobile-btn-action wet" id="act-wet-mob">
+        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+          <span class="mobile-btn-badge">01</span>
+          <span style="font-size: 10px; color: var(--rose); font-weight: 700;">IZQUIERDA</span>
+        </div>
+        <div class="mobile-btn-title">Papel Mojado</div>
+        <div class="mobile-btn-sub">Servilleta / Líquidos &rarr; No Reciclar</div>
+      </button>
+
+      <button class="mobile-btn-action dry" id="act-dry-mob">
+        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+          <span class="mobile-btn-badge">02</span>
+          <span style="font-size: 10px; color: var(--champagne); font-weight: 700;">DERECHA</span>
+        </div>
+        <div class="mobile-btn-title">Papel Seco</div>
+        <div class="mobile-btn-sub">Hoja Limpia &rarr; 100% Reciclable</div>
+      </button>
+    </div>
+
+    <!-- Secondary Utilities Row -->
+    <div class="mobile-sub-actions">
+      <button class="btn-action-tool" id="act-approach-mob">
+        <span>00 · Sensor Eco</span>
+      </button>
+      <button class="btn-action-tool highlight" id="btn-auto-demo-mob">
+        <span>▶ Presentación</span>
+      </button>
+      <button class="btn-action-tool danger" id="act-reset-mob">
+        <span>Reset</span>
+      </button>
+    </div>
+
+    <!-- Expandable Telemetry & Counters on Mobile -->
+    <div class="mobile-tele-sheet" id="mobile-tele-sheet">
+      <!-- Live Narration -->
+      <div class="narration-box" style="padding: 8px 12px;">
+        <div class="narration-tag" id="narrate-icon-mob">ESTADO GENERAL</div>
+        <div class="narration-text" id="narrate-text-mob" style="font-size: 11px;">
+          Estación lista. La rampa de acero se encuentra horizontal a 90°.
+        </div>
+      </div>
+
+      <!-- Telemetry Readings -->
+      <div class="card tele-grid" style="padding: 8px 10px;">
+        <div class="tele-line">
+          <span class="tele-label">Distancia:</span>
+          <span class="tele-value" id="hud-dist-mob">78 cm</span>
+        </div>
+        <div class="tele-line">
+          <span class="tele-label">Fibra A0:</span>
+          <span class="tele-value" id="hud-moist-mob">18 (Seco)</span>
+        </div>
+        <div class="tele-line">
+          <span class="tele-label">Servo SG90:</span>
+          <span class="tele-value" id="hud-servo-mob">90°</span>
+        </div>
+      </div>
+
+      <!-- Counters -->
+      <div class="counter-dual">
+        <div class="counter-item wet" style="padding: 6px 10px;">
+          <div class="counter-val" id="cnt-wet-mob" style="font-size: 18px;">0</div>
+          <div class="counter-tag">Papel Húmedo (01)</div>
+        </div>
+        <div class="counter-item dry" style="padding: 6px 10px;">
+          <div class="counter-val" id="cnt-dry-mob" style="font-size: 18px;">0</div>
+          <div class="counter-tag">Papel Seco (02)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL: EQUIPO DEL GRADO 10-01
+       ========================================================================= */ -->
+  <div class="app-modal interactive" id="team-modal">
+    <div class="modal-sheet-content">
+      <button class="btn-close-modal" id="btn-close-team">&times;</button>
+      
+      <div>
+        <div class="modal-header-tag">Proyecto de Robótica & Sostenibilidad</div>
+        <div class="modal-header-title">SmartSort <span>Paper Pro</span></div>
+        <div class="modal-header-sub">Grado 10-01 • Equipo de Investigación y Desarrollo</div>
+      </div>
+
+      <div class="team-members-grid">
+        <!-- 1. Paula -->
+        <div class="member-card">
+          <div class="member-avatar">PB</div>
+          <div class="member-info">
+            <div class="member-name">Paula Andrea Bohórquez Díaz</div>
+            
+          </div>
+        </div>
+
+        <!-- 2. Ana María -->
+        <div class="member-card">
+          <div class="member-avatar">AI</div>
+          <div class="member-info">
+            <div class="member-name">Ana María Infante Mendoza</div>
+            
+          </div>
+        </div>
+
+        <!-- 3. Dariana -->
+        <div class="member-card">
+          <div class="member-avatar">DR</div>
+          <div class="member-info">
+            <div class="member-name">Dariana Isabel Rentería Puello</div>
+            
+          </div>
+        </div>
+
+        <!-- 4. Samuel -->
+        <div class="member-card">
+          <div class="member-avatar">SL</div>
+          <div class="member-info">
+            <div class="member-name">Samuel David Lambraño Núñez</div>
+            
+          </div>
+        </div>
+
+        <!-- 5. Denzel -->
+        <div class="member-card">
+          <div class="member-avatar">DL</div>
+          <div class="member-info">
+            <div class="member-name">Denzel David Luna López</div>
+            
+          </div>
+        </div>
+
+        <!-- 6. Adrián -->
+        <div class="member-card">
+          <div class="member-avatar">AC</div>
+          <div class="member-info">
+            <div class="member-name">Adrián Esteban Caro Romero</div>
+            
+          </div>
+        </div>
+      </div>
+
+      <div class="team-footer-box">
+        <strong>Objetivo Institucional:</strong> Separar automáticamente el papel virgen reciclable del papel húmedo o contaminado con grasas, protegiendo las fibras celulósicas y evitando la descomposición por moho en los centros de acopio.
+      </div>
+
+      
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL: VISTAS DE CÁMARA (Mobile Overlay)
+       ========================================================================= -->
+  <div id="mobile-cam-sheet" class="interactive">
+    <div class="card">
+      <div class="card-label">
+        <span>Ángulos de Visualización 3D</span>
+        <button id="btn-close-mob-cams" style="background:none; border:none; color:#fca5a5; font-size:16px; cursor:pointer;">&times;</button>
+      </div>
+      <button class="btn-quiet active" data-cam="iso">
+        <span>Perspectiva General</span>
+        <span class="icon-num">01</span>
+      </button>
+      <button class="btn-quiet" data-cam="sensor">
+        <span>Bandeja & Sensor</span>
+        <span class="icon-num">02</span>
+      </button>
+      <button class="btn-quiet" data-cam="doors">
+        <span>Compuertas y Botes</span>
+        <span class="icon-num">03</span>
+      </button>
+      <button class="btn-quiet" data-cam="arduino">
+        <span>Microcontrolador Arduino</span>
+        <span class="icon-num">04</span>
+      </button>
+      <button class="btn-quiet" id="cam-xray-mob">
+        <span>Modo Rayos X (Estructura Interna)</span>
+        <span class="icon-num">05</span>
+      </button>
+    </div>
+  </div>
+
+  <canvas id="webgl-canvas"></canvas>
+
+  <script>
+    /* =========================================================================
+       AUDIO FEEDBACK & SYNTHETIC STUDIO TONES
+       ========================================================================= */
+    let audioCtx = null;
+    function playTone(freq, dur = 0.12, type = 'sine') {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + dur);
+      } catch(e) {}
+    }
+
+    function updateText(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.innerText = val;
+    }
+
+    function updateBothTexts(deskId, mobId, val) {
+      updateText(deskId, val);
+      updateText(mobId, val);
+    }
+
+    /* =========================================================================
+       PROCEDURAL TEXTURES: SERIGRAPH LABELS FOR DOORS & ARDUINO
+       ========================================================================= */
+    function createPaperDoorTexture(isWet) {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 512;
+      const ctx = c.getContext('2d');
+      
+      ctx.fillStyle = isWet ? '#161318' : '#141618';
+      ctx.fillRect(0, 0, 512, 512);
+
+      const color = isWet ? '#f472b6' : '#e2d9d0';
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 8;
+      ctx.strokeRect(20, 20, 472, 472);
+
+      // Section Number
+      ctx.fillStyle = color;
+      ctx.font = 'bold 80px "JetBrains Mono", monospace';
+      ctx.fillText(isWet ? '01' : '02', 45, 120);
+
+      // Label
+      ctx.font = 'bold 44px "Plus Jakarta Sans", sans-serif';
+      ctx.fillText(isWet ? 'PAPEL HÚMEDO' : 'PAPEL SECO', 45, 210);
+
+      // Subtitle
+      ctx.font = '500 24px "Plus Jakarta Sans", sans-serif';
+      ctx.fillStyle = '#8e95a5';
+      ctx.fillText(isWet ? 'Descarte / No Reciclable' : 'Fibra Limpia / 100% Reciclable', 45, 260);
+
+      // Technical icon marker
+      ctx.beginPath();
+      ctx.arc(440, 90, 18, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      return new THREE.CanvasTexture(c);
+    }
+
+    function createArduinoTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 512;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#0f3a47';
+      ctx.fillRect(0, 0, 512, 512);
+
+      ctx.strokeStyle = '#d4af37';
+      ctx.lineWidth = 4;
+      for (let x = 30; x < 480; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, 40);
+        ctx.lineTo(x + 20, 80);
+        ctx.lineTo(x + 20, 440);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 36px monospace';
+      ctx.fillText('ARDUINO', 160, 230);
+      ctx.font = 'bold 24px monospace';
+      ctx.fillText('UNO R3', 195, 270);
+
+      ctx.fillStyle = '#18181b';
+      ctx.fillRect(30, 20, 452, 26);
+      ctx.fillRect(30, 466, 452, 26);
+
+      return new THREE.CanvasTexture(c);
+    }
+
+    /* =========================================================================
+       THREE.JS SETUP & STUDIO LIGHTING
+       ========================================================================= */
+    const canvas = document.getElementById('webgl-canvas');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0c10);
+    scene.fog = new THREE.FogExp2(0x0b0c10, 0.038);
+
+    const isMobileInitial = window.innerWidth <= 900;
+    const initialFov = isMobileInitial ? 46 : 38;
+
+    const camera = new THREE.PerspectiveCamera(initialFov, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(3.5, 2.3, 4.0);
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      antialias: true,
+      powerPreference: 'high-performance'
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.35;
+
+    const controls = new THREE.OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.maxPolarAngle = Math.PI / 2 + 0.04;
+    controls.minDistance = 1.8;
+    controls.maxDistance = 8.5;
+    controls.target.set(0, isMobileInitial ? 1.2 : 1.35, 0);
+
+    // Studio Key Light
+    const keyLight = new THREE.DirectionalLight(0xfff7ed, 1.9);
+    keyLight.position.set(4, 7, 5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = 2048;
+    keyLight.shadow.mapSize.height = 2048;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 16;
+    keyLight.shadow.bias = -0.0004;
+    scene.add(keyLight);
+
+    // Subtle Blush Fill Light
+    const fillLight = new THREE.DirectionalLight(0xfce7f3, 0.85);
+    fillLight.position.set(-5, 3, -2);
+    scene.add(fillLight);
+
+    // Rim/Back Light
+    const rimLight = new THREE.DirectionalLight(0xdbeafe, 1.2);
+    rimLight.position.set(0, 6, -5);
+    scene.add(rimLight);
+
+    // Ambient
+    const ambientLight = new THREE.AmbientLight(0x272a38, 1.25);
+    scene.add(ambientLight);
+
+    // Internal Warm LED Spotlight in the intake bay
+    const baySpot = new THREE.SpotLight(0xffecd2, 2.4, 3.8, Math.PI / 3.2, 0.4, 1.2);
+    baySpot.position.set(0, 2.38, 0.05);
+    baySpot.target.position.set(0, 1.4, 0.05);
+    scene.add(baySpot);
+    scene.add(baySpot.target);
+
+    // Floor with studio shadow catcher
+    const floorGeo = new THREE.PlaneGeometry(30, 30);
+    const floorMat = new THREE.MeshStandardMaterial({
+      color: 0x090a0d,
+      roughness: 0.82,
+      metalness: 0.15
+    });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.01;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Studio Grid Ring
+    const grid = new THREE.GridHelper(16, 24, 0x222634, 0x141620);
+    grid.position.y = 0;
+    scene.add(grid);
+
+    /* =========================================================================
+       MATERIALS: BLUSH PINK POWDER COAT & ANODIZED METALS
+       ========================================================================= */
+    const roseChassisMat = new THREE.MeshStandardMaterial({
+      color: 0xdf8497,
+      roughness: 0.38,
+      metalness: 0.18
+    });
+
+    const darkInteriorMat = new THREE.MeshStandardMaterial({
+      color: 0x111319,
+      roughness: 0.7,
+      metalness: 0.3
+    });
+
+    const aluminumTrimMat = new THREE.MeshStandardMaterial({
+      color: 0xe2d9d0,
+      roughness: 0.22,
+      metalness: 0.85
+    });
+
+    const rampSteelMat = new THREE.MeshStandardMaterial({
+      color: 0xeeeeee,
+      roughness: 0.18,
+      metalness: 0.88
+    });
+
+    const goldSensorMat = new THREE.MeshStandardMaterial({
+      color: 0xd4af37,
+      roughness: 0.25,
+      metalness: 0.95
+    });
+
+    const servoBodyMat = new THREE.MeshStandardMaterial({
+      color: 0x1d4ed8,
+      roughness: 0.35,
+      metalness: 0.1
+    });
+
+    const smokedGlassMat = new THREE.MeshPhysicalMaterial({
+      color: 0x101318,
+      transparent: true,
+      opacity: 0.42,
+      roughness: 0.1,
+      metalness: 0.1,
+      transmission: 0.6,
+      ior: 1.52
+    });
+
+    /* =========================================================================
+       3D MODEL: SMART SORT PAPER PRO KIOSK
+       ========================================================================= */
+    const kioskGroup = new THREE.Group();
+    scene.add(kioskGroup);
+
+    // Base plinth
+    const plinth = new THREE.Mesh(
+      new THREE.BoxGeometry(1.64, 0.1, 1.14),
+      new THREE.MeshStandardMaterial({ color: 0x141620, roughness: 0.6, metalness: 0.4 })
+    );
+    plinth.position.y = 0.05;
+    plinth.castShadow = true;
+    plinth.receiveShadow = true;
+    kioskGroup.add(plinth);
+
+    // Lower cabinet body
+    const lowerBody = new THREE.Mesh(
+      new THREE.BoxGeometry(1.58, 1.25, 1.08),
+      roseChassisMat
+    );
+    lowerBody.position.y = 0.05 + 0.625;
+    lowerBody.castShadow = true;
+    lowerBody.receiveShadow = true;
+    kioskGroup.add(lowerBody);
+
+    // Internal Bin 01: Wet Paper (Left)
+    const binLeft = new THREE.Mesh(
+      new THREE.BoxGeometry(0.68, 0.98, 0.88),
+      new THREE.MeshStandardMaterial({ color: 0x4a1525, roughness: 0.6, metalness: 0.2 })
+    );
+    binLeft.position.set(-0.38, 0.62, 0.02);
+    kioskGroup.add(binLeft);
+
+    // Internal Bin 02: Dry Paper (Right)
+    const binRight = new THREE.Mesh(
+      new THREE.BoxGeometry(0.68, 0.98, 0.88),
+      new THREE.MeshStandardMaterial({ color: 0x24283b, roughness: 0.5, metalness: 0.3 })
+    );
+    binRight.position.set(0.38, 0.62, 0.02);
+    kioskGroup.add(binRight);
+
+    // Lower Doors Pivots (Pivots at the bottom of the doors)
+    const doorTexWet = createPaperDoorTexture(true);
+    const doorTexDry = createPaperDoorTexture(false);
+
+    const doorMatWet = new THREE.MeshStandardMaterial({ map: doorTexWet, roughness: 0.2 });
+    const doorMatDry = new THREE.MeshStandardMaterial({ map: doorTexDry, roughness: 0.2 });
+
+    const doorLeftPivot = new THREE.Group();
+    doorLeftPivot.position.set(-0.38, 0.16, 0.542);
+    kioskGroup.add(doorLeftPivot);
+
+    const doorLeftMesh = new THREE.Mesh(new THREE.BoxGeometry(0.72, 1.05, 0.024), doorMatWet);
+    doorLeftMesh.position.set(0, 0.525, 0);
+    doorLeftMesh.castShadow = true;
+    doorLeftPivot.add(doorLeftMesh);
+
+    const doorRightPivot = new THREE.Group();
+    doorRightPivot.position.set(0.38, 0.16, 0.542);
+    kioskGroup.add(doorRightPivot);
+
+    const doorRightMesh = new THREE.Mesh(new THREE.BoxGeometry(0.72, 1.05, 0.024), doorMatDry);
+    doorRightMesh.position.set(0, 0.525, 0);
+    doorRightMesh.castShadow = true;
+    doorRightPivot.add(doorRightMesh);
+
+    // Upper Canopy / Roof
+    const canopy = new THREE.Mesh(
+      new THREE.BoxGeometry(1.58, 0.25, 1.08),
+      roseChassisMat
+    );
+    canopy.position.y = 2.42;
+    canopy.castShadow = true;
+    kioskGroup.add(canopy);
+
+    // Open Chamber Pillars & Back Wall
+    const pillarMat = aluminumTrimMat;
+    const p1 = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.038, 1.05, 16), pillarMat);
+    p1.position.set(-0.73, 1.82, 0.48);
+    kioskGroup.add(p1);
+
+    const p2 = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.038, 1.05, 16), pillarMat);
+    p2.position.set(0.73, 1.82, 0.48);
+    kioskGroup.add(p2);
+
+    const backWall = new THREE.Mesh(
+      new THREE.BoxGeometry(1.5, 1.05, 0.05),
+      darkInteriorMat
+    );
+    backWall.position.set(0, 1.82, -0.48);
+    kioskGroup.add(backWall);
+
+    // Ultrasonic Sensor HC-SR04 mounted under the canopy
+    const usGroup = new THREE.Group();
+    usGroup.position.set(0, 2.26, 0.32);
+    kioskGroup.add(usGroup);
+
+    const usPcb = new THREE.Mesh(
+      new THREE.BoxGeometry(0.34, 0.14, 0.025),
+      new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.4 })
+    );
+    usGroup.add(usPcb);
+
+    const usEyeGeo = new THREE.CylinderGeometry(0.046, 0.046, 0.05, 20);
+    const usEyeMat = aluminumTrimMat;
+    const usEye1 = new THREE.Mesh(usEyeGeo, usEyeMat);
+    usEye1.rotation.x = Math.PI / 2;
+    usEye1.position.set(-0.09, 0, 0.028);
+    usGroup.add(usEye1);
+
+    const usEye2 = new THREE.Mesh(usEyeGeo, usEyeMat);
+    usEye2.rotation.x = Math.PI / 2;
+    usEye2.position.set(0.09, 0, 0.028);
+    usGroup.add(usEye2);
+
+    // Ultrasonic Sound Wave Visualizer
+    const waveGeo = new THREE.RingGeometry(0.1, 0.15, 32);
+    const waveMat = new THREE.MeshBasicMaterial({
+      color: 0xf472b6,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide
+    });
+    const wave = new THREE.Mesh(waveGeo, waveMat);
+    wave.rotation.x = Math.PI / 2;
+    wave.position.set(0, 2.15, 0.32);
+    kioskGroup.add(wave);
+
+    // Arduino Board with circuits on back wall
+    const arduinoBoard = new THREE.Mesh(
+      new THREE.BoxGeometry(0.34, 0.44, 0.02),
+      new THREE.MeshStandardMaterial({ map: createArduinoTexture(), roughness: 0.4 })
+    );
+    arduinoBoard.position.set(0.42, 1.82, -0.44);
+    kioskGroup.add(arduinoBoard);
+
+    // SG90 Servomotor Model
+    const servoGroup = new THREE.Group();
+    servoGroup.position.set(0, 1.48, -0.22);
+    kioskGroup.add(servoGroup);
+
+    const servoBody = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.22, 0.12), servoBodyMat);
+    servoGroup.add(servoBody);
+
+    const servoHorn = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.012, 0.012, 0.14, 12),
+      aluminumTrimMat
+    );
+    servoHorn.rotation.z = Math.PI / 2;
+    servoHorn.position.set(0, 0.08, 0.065);
+    servoGroup.add(servoHorn);
+
+    // Tilting Stainless Steel Ramp Assembly
+    const tiltRig = new THREE.Group();
+    tiltRig.position.set(0, 1.52, 0.05);
+    kioskGroup.add(tiltRig);
+
+    // Polished Stainless Steel Ramp
+    const rampPlate = new THREE.Mesh(
+      new THREE.BoxGeometry(0.88, 0.016, 0.72),
+      rampSteelMat
+    );
+    rampPlate.castShadow = true;
+    rampPlate.receiveShadow = true;
+    tiltRig.add(rampPlate);
+
+    // Side safety rails
+    const railL = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.06, 0.72), aluminumTrimMat);
+    railL.position.set(-0.43, 0.03, 0);
+    tiltRig.add(railL);
+
+    const railR = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.06, 0.72), aluminumTrimMat);
+    railR.position.set(0.43, 0.03, 0);
+    tiltRig.add(railR);
+
+    // Gold Conductivity Sensor Grid on the ramp
+    const sensorBase = new THREE.Mesh(
+      new THREE.BoxGeometry(0.38, 0.006, 0.28),
+      new THREE.MeshStandardMaterial({ color: 0x052e16, roughness: 0.3 })
+    );
+    sensorBase.position.set(0, 0.01, 0);
+    tiltRig.add(sensorBase);
+
+    // 5 Interlocking Gold Contact Fingers
+    for (let i = -2; i <= 2; i++) {
+      const finger = new THREE.Mesh(
+        new THREE.BoxGeometry(0.32, 0.008, 0.02),
+        goldSensorMat
+      );
+      finger.position.set(0, 0.014, i * 0.048);
+      tiltRig.add(finger);
+    }
+
+    // Spark / Conduction Lines
+    const sparkGeo = new THREE.BufferGeometry();
+    const sparkPts = [];
+    for (let i = 0; i < 20; i++) {
+      sparkPts.push(new THREE.Vector3((Math.random() - 0.5) * 0.28, 0.025, (Math.random() - 0.5) * 0.2));
+    }
+    sparkGeo.setFromPoints(sparkPts);
+    const sparkLines = new THREE.LineSegments(
+      sparkGeo,
+      new THREE.LineBasicMaterial({ color: 0xf472b6, linewidth: 2 })
+    );
+    sparkLines.visible = false;
+    tiltRig.add(sparkLines);
+
+    // Waste 1: Dry Paper Ball (Recyclable)
+    const dryPaper = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(0.12, 1),
+      new THREE.MeshStandardMaterial({ color: 0xfdfbf7, roughness: 0.9, bumpScale: 0.05 })
+    );
+    dryPaper.position.set(0, 2.3, 0.05);
+    dryPaper.castShadow = true;
+    dryPaper.visible = false;
+    kioskGroup.add(dryPaper);
+
+    // Waste 2: Wet Soaked Paper (Contaminated)
+    const wetPaper = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(0.12, 1),
+      new THREE.MeshStandardMaterial({ color: 0x8b7355, roughness: 0.18, metalness: 0.25 })
+    );
+    wetPaper.position.set(0, 2.3, 0.05);
+    wetPaper.castShadow = true;
+    wetPaper.visible = false;
+    kioskGroup.add(wetPaper);
+
+    /* =========================================================================
+       CAMERA VIEWS & CINEMATIC TRANSITIONS
+       ========================================================================= */
+    const views = {
+      iso: { pos: new THREE.Vector3(3.5, 2.3, 4.0), look: new THREE.Vector3(0, 1.35, 0) },
+      sensor: { pos: new THREE.Vector3(0.05, 2.2, 1.35), look: new THREE.Vector3(0, 1.55, 0.1) },
+      doors: { pos: new THREE.Vector3(0, 0.95, 2.8), look: new THREE.Vector3(0, 0.65, 0) },
+      arduino: { pos: new THREE.Vector3(1.4, 2.1, 0.8), look: new THREE.Vector3(0.35, 1.82, -0.3) }
+    };
+
+    let targetCamPos = views.iso.pos.clone();
+    let targetCamLook = views.iso.look.clone();
+    let isCamMoving = false;
+    let isXray = false;
+    let animSpeedMultiplier = 1.0;
+
+    let cntWet = 0;
+    let cntDry = 0;
+
+    let targetTilt = 0;
+    let currentTilt = 0;
+    const TILT_WET = 0.72;   // ~41° Left (01 Húmedo)
+    const TILT_DRY = -0.72;  // ~41° Right (02 Seco)
+
+    let targetDoorLeft = 0;
+    let currentDoorLeft = 0;
+    let targetDoorRight = 0;
+    let currentDoorRight = 0;
+
+    function switchView(viewKey) {
+      if (views[viewKey]) {
+        targetCamPos.copy(views[viewKey].pos);
+        targetCamLook.copy(views[viewKey].look);
+        isCamMoving = true;
+
+        document.querySelectorAll('[data-cam]').forEach(b => {
+          b.classList.toggle('active', b.getAttribute('data-cam') === viewKey);
+        });
+      }
+    }
+
+    document.querySelectorAll('[data-cam]').forEach(b => {
+      b.addEventListener('click', function() {
+        switchView(this.getAttribute('data-cam'));
+        document.getElementById('mobile-cam-sheet')?.classList.remove('show');
+      });
+    });
+
+    // Mobile Views Overlay
+    document.getElementById('btn-open-views')?.addEventListener('click', () => {
+      document.getElementById('mobile-cam-sheet')?.classList.add('show');
+    });
+    document.getElementById('btn-close-mob-cams')?.addEventListener('click', () => {
+      document.getElementById('mobile-cam-sheet')?.classList.remove('show');
+    });
+
+    // X-Ray Mode
+    function toggleXray() {
+      isXray = !isXray;
+      roseChassisMat.opacity = isXray ? 0.22 : 1.0;
+      roseChassisMat.transparent = isXray;
+      roseChassisMat.needsUpdate = true;
+      document.getElementById('cam-xray-desk')?.classList.toggle('active', isXray);
+      document.getElementById('cam-xray-mob')?.classList.toggle('active', isXray);
+    }
+    document.getElementById('cam-xray-desk')?.addEventListener('click', toggleXray);
+    document.getElementById('cam-xray-mob')?.addEventListener('click', toggleXray);
+
+    // Fullscreen Toggle
+    document.getElementById('btn-fullscreen')?.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    // Mobile Drawer Toggle
+    const teleDrawer = document.getElementById('mobile-tele-sheet');
+    const drawerLabel = document.getElementById('mobile-drawer-label');
+    const drawerArrow = document.getElementById('mobile-drawer-arrow');
+
+    document.getElementById('btn-toggle-tele-mobile')?.addEventListener('click', () => {
+      const isExp = teleDrawer.classList.toggle('expanded');
+      drawerLabel.innerText = isExp ? 'Ocultar Telemetría' : 'Ver Telemetría y Sensores';
+      drawerArrow.innerHTML = isExp ? '&#9660;' : '&#9650;';
+    });
+
+    // Speed Toggle
+    document.getElementById('act-speed-desk')?.addEventListener('click', function() {
+      if (animSpeedMultiplier === 1.0) {
+        animSpeedMultiplier = 0.5;
+        updateText('spd-label-desk', 'Velocidad: 0.5x');
+      } else {
+        animSpeedMultiplier = 1.0;
+        updateText('spd-label-desk', 'Velocidad: 1x');
+      }
+    });
+
+    function updatePipeline(stepNum) {
+      for (let i = 1; i <= 5; i++) {
+        const el = document.getElementById(`nd-${i}`);
+        if (!el) continue;
+        el.className = 'p-node';
+        if (i === stepNum) el.className = 'p-node active';
+      }
+    }
+
+    function setNarration(tag, text) {
+      updateBothTexts('narrate-icon', 'narrate-icon-mob', tag);
+      updateBothTexts('narrate-text', 'narrate-text-mob', text);
+    }
+
+    // Active Sequence State
+    let activeSequence = null;
+
+    function resetAll() {
+      activeSequence = null;
+      dryPaper.visible = false;
+      wetPaper.visible = false;
+      sparkLines.visible = false;
+      wave.material.opacity = 0;
+
+      targetTilt = 0;
+      currentTilt = 0;
+      tiltRig.rotation.z = 0;
+      servoHorn.rotation.z = 0;
+
+      targetDoorLeft = 0;
+      currentDoorLeft = 0;
+      doorLeftPivot.rotation.x = 0;
+
+      targetDoorRight = 0;
+      currentDoorRight = 0;
+      doorRightPivot.rotation.x = 0;
+
+      updatePipeline(1);
+      updateBothTexts('hud-dist', 'hud-dist-mob', '78 cm');
+      updateBothTexts('hud-moist', 'hud-moist-mob', '18 (Aislante)');
+      updateBothTexts('hud-servo', 'hud-servo-mob', '90° (Equilibrio)');
+      updateText('sys-status', 'LISTO');
+      setNarration('ESTADO GENERAL', 'Estación lista en reposo. La rampa de acero se encuentra horizontal a 90° y ambas compuertas permanecen cerradas.');
+    }
+
+    document.getElementById('act-reset-desk')?.addEventListener('click', resetAll);
+    document.getElementById('act-reset-mob')?.addEventListener('click', resetAll);
+
+    // 00. Ultrasonic Approach Action
+    function triggerApproach() {
+      resetAll();
+      activeSequence = { type: 'approach', time: 0, duration: 2.5 };
+      playTone(880, 0.15);
+      updateBothTexts('hud-dist', 'hud-dist-mob', '8.4 cm');
+      updateText('sys-status', 'DETECCIÓN');
+      setNarration('SENSOR ULTRASÓNICO HC-SR04', 'Onda de 40 kHz emitida. Se detecta la mano del usuario a 8.4 cm y se despierta el sistema mecatrónico.');
+      switchView('sensor');
+    }
+    document.getElementById('act-approach-desk')?.addEventListener('click', triggerApproach);
+    document.getElementById('act-approach-mob')?.addEventListener('click', triggerApproach);
+
+    // 01. Wet Paper Action
+    function triggerWet() {
+      resetAll();
+      activeSequence = { type: 'wet', time: 0, duration: 5.6 };
+      wetPaper.position.set(0, 2.3, 0.05);
+      wetPaper.visible = true;
+      switchView('sensor');
+    }
+    document.getElementById('act-wet-desk')?.addEventListener('click', triggerWet);
+    document.getElementById('act-wet-mob')?.addEventListener('click', triggerWet);
+
+    // 02. Dry Paper Action
+    function triggerDry() {
+      resetAll();
+      activeSequence = { type: 'dry', time: 0, duration: 5.6 };
+      dryPaper.position.set(0, 2.3, 0.05);
+      dryPaper.visible = true;
+      switchView('sensor');
+    }
+    document.getElementById('act-dry-desk')?.addEventListener('click', triggerDry);
+    document.getElementById('act-dry-mob')?.addEventListener('click', triggerDry);
+
+    // Automated Guided Presentation Loop (Great for holding phone while speaking!)
+    let isAutoDemo = false;
+    let autoDemoStep = 0;
+    let autoDemoTimer = null;
+
+    function runAutoDemo() {
+      if (isAutoDemo) {
+        clearTimeout(autoDemoTimer);
+        isAutoDemo = false;
+        resetAll();
+        return;
+      }
+      isAutoDemo = true;
+      autoDemoStep = 0;
+      nextAutoStep();
+    }
+
+    function nextAutoStep() {
+      if (!isAutoDemo) return;
+      if (autoDemoStep === 0) {
+        triggerApproach();
+        autoDemoTimer = setTimeout(() => { autoDemoStep++; nextAutoStep(); }, 3000);
+      } else if (autoDemoStep === 1) {
+        triggerWet();
+        autoDemoTimer = setTimeout(() => { autoDemoStep++; nextAutoStep(); }, 6200);
+      } else if (autoDemoStep === 2) {
+        triggerDry();
+        autoDemoTimer = setTimeout(() => {
+          isAutoDemo = false;
+          setNarration('FIN DE PRESENTACIÓN', 'Demostración completa ejecutada. Ambos tipos de papel fueron clasificados sin error.');
+        }, 6200);
+      }
+    }
+
+    document.getElementById('btn-auto-demo-desk')?.addEventListener('click', runAutoDemo);
+    document.getElementById('btn-auto-demo-mob')?.addEventListener('click', runAutoDemo);
+
+    // Step by Step Mode
+    let manualStepIdx = 0;
+    const presentationSteps = [
+      { step: 1, tag: "01 / EQUILIBRIO", text: "Rampa a 90°. Ambas compuertas están selladas esperando residuo." },
+      { step: 2, tag: "02 / RECEPCIÓN", text: "La hoja entra a la cámara y el sensor ultrasónico confirma presencia (< 15 cm)." },
+      { step: 3, tag: "03 / CONDUCTIVIDAD", text: "El microcontrolador mide la impedancia de las fibras celulósicas en el Pin Analógico A0." },
+      { step: 4, tag: "04 / DESVÍO MECÁNICO", text: "El servomotor inclina la rampa (Izquierda = Húmedo, Derecha = Seco) y abre la compuerta correspondiente." },
+      { step: 5, tag: "05 / ALMACENADO", text: "El papel cae al contenedor correspondiente sin contaminar el material reciclable." }
+    ];
+
+    document.getElementById('btn-next-step-desk')?.addEventListener('click', () => {
+      manualStepIdx = (manualStepIdx + 1) % presentationSteps.length;
+      const s = presentationSteps[manualStepIdx];
+      updatePipeline(s.step);
+      setNarration(s.tag, s.text);
+      playTone(520 + manualStepIdx * 80, 0.1);
+      if (s.step === 2) switchView('sensor');
+      if (s.step === 4) switchView('doors');
+    });
+
+    /* =========================================================================
+       ANIMATION LOOP
+       ========================================================================= */
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      try {
+        const delta = clock.getDelta();
+
+        if (activeSequence) {
+          activeSequence.time += delta * animSpeedMultiplier;
+          const t = activeSequence.time;
+
+          // 0. Ultrasonic Waves
+          if (activeSequence.type === 'approach') {
+            const waveScale = 0.2 + (t / 2.5) * 3.8;
+            wave.scale.set(waveScale, waveScale, 1);
+            wave.material.opacity = Math.max(0, 0.95 - (t / 2.5) * 0.95);
+            if (t >= activeSequence.duration) resetAll();
+          }
+          // 1. Wet Paper (Tilts Left to 01)
+          else if (activeSequence.type === 'wet') {
+            if (t < 1.1) {
+              updatePipeline(2);
+              const dropProg = Math.min(1, t / 1.0);
+              wetPaper.position.y = 2.3 - Math.sin(dropProg * Math.PI * 0.5) * 0.78;
+              updateText('sys-status', 'RECEPCIÓN');
+              setNarration('FASE 2 / RECEPCIÓN', 'El papel húmedo se deposita sobre la rampa y hace contacto con las pistas de oro.');
+            }
+            else if (t < 2.2) {
+              updatePipeline(3);
+              wetPaper.position.set(0, 1.52, 0.05);
+              sparkLines.visible = true;
+              updateBothTexts('hud-moist', 'hud-moist-mob', '792 (Conducción Iónica)');
+              updateText('sys-status', 'PAPEL HÚMEDO');
+              setNarration('FASE 3 / TEST DE FIBRA', 'Lectura A0 = 792 (> 250). Los iones del agua conducen corriente. El Arduino determina: NO RECICLABLE.');
+              if (Math.random() < 0.08) playTone(900, 0.04, 'triangle');
+            }
+            else if (t < 4.2) {
+              updatePipeline(4);
+              targetTilt = TILT_WET;             // Tilts Left to 01
+              targetDoorLeft = 0.45;             // Door 01 swings open
+              updateBothTexts('hud-servo', 'hud-servo-mob', '45° (Hacia Izquierda)');
+              updateText('sys-status', 'DESVIANDO A 01');
+              setNarration('FASE 4 / DESVÍO A COMPARTIMENTO 01', 'El servomotor bascula a la IZQUIERDA. Se abre la compuerta 01 y la hoja cae al contenedor de descarte.');
+
+              const slideProg = Math.min(1, (t - 2.2) / 1.6);
+              wetPaper.position.x = -slideProg * 0.48;
+              wetPaper.position.y = 1.52 - (slideProg * 0.85);
+
+              if (slideProg >= 1) {
+                wetPaper.visible = false;
+                sparkLines.visible = false;
+              }
+            }
+            else if (t < 5.6) {
+              updatePipeline(5);
+              targetDoorLeft = 0;
+              targetTilt = 0;
+              updateBothTexts('hud-servo', 'hud-servo-mob', '90° (Equilibrio)');
+              updateText('sys-status', 'DEPÓSITO COMPLETADO');
+              setNarration('FASE 5 / ALMACENAMIENTO', 'Papel húmedo confinado sin contaminar el lote limpio. La rampa vuelve a 90°.');
+            }
+            else {
+              cntWet++;
+              updateBothTexts('cnt-wet', 'cnt-wet-mob', cntWet);
+              playTone(523.25, 0.2);
+              resetAll();
+            }
+          }
+          // 2. Dry Paper (Tilts Right to 02)
+          else if (activeSequence.type === 'dry') {
+            if (t < 1.1) {
+              updatePipeline(2);
+              const dropProg = Math.min(1, t / 1.0);
+              dryPaper.position.y = 2.3 - Math.sin(dropProg * Math.PI * 0.5) * 0.78;
+              updateText('sys-status', 'RECEPCIÓN');
+              setNarration('FASE 2 / RECEPCIÓN', 'La hoja bond seca se posa sobre la rampa de acero inoxidable.');
+            }
+            else if (t < 2.2) {
+              updatePipeline(3);
+              dryPaper.position.set(0, 1.52, 0.05);
+              sparkLines.visible = false;
+              updateBothTexts('hud-moist', 'hud-moist-mob', '22 (Dieléctrico Seco)');
+              updateText('sys-status', 'PAPEL SECO');
+              setNarration('FASE 3 / TEST DE FIBRA', 'Lectura A0 = 22 (< 250). Resistencia infinita dieléctrica. El Arduino confirma: 100% RECICLABLE.');
+            }
+            else if (t < 4.2) {
+              updatePipeline(4);
+              targetTilt = TILT_DRY;             // Tilts Right to 02
+              targetDoorRight = 0.45;            // Door 02 swings open
+              updateBothTexts('hud-servo', 'hud-servo-mob', '135° (Hacia Derecha)');
+              updateText('sys-status', 'DESVIANDO A 02');
+              setNarration('FASE 4 / DESVÍO A COMPARTIMENTO 02', 'El servomotor bascula a la DERECHA. Se abre la compuerta 02 y el papel limpio resbala al contenedor de reciclaje.');
+
+              const slideProg = Math.min(1, (t - 2.2) / 1.6);
+              dryPaper.position.x = slideProg * 0.48;
+              dryPaper.position.y = 1.52 - (slideProg * 0.85);
+
+              if (slideProg >= 1) {
+                dryPaper.visible = false;
+              }
+            }
+            else if (t < 5.6) {
+              updatePipeline(5);
+              targetDoorRight = 0;
+              targetTilt = 0;
+              updateBothTexts('hud-servo', 'hud-servo-mob', '90° (Equilibrio)');
+              updateText('sys-status', 'DEPÓSITO COMPLETADO');
+              setNarration('FASE 5 / ALMACENAMIENTO', 'Papel reciclable almacenado. La estación retorna a posición de espera 90°.');
+            }
+            else {
+              cntDry++;
+              updateBothTexts('cnt-dry', 'cnt-dry-mob', cntDry);
+              playTone(659.25, 0.2);
+              resetAll();
+            }
+          }
+        }
+
+        // Mechanical Kinematics
+        currentTilt += (targetTilt - currentTilt) * 0.12;
+        tiltRig.rotation.z = currentTilt;
+        servoHorn.rotation.z = -currentTilt * 1.4;
+
+        currentDoorLeft += (targetDoorLeft - currentDoorLeft) * 0.12;
+        doorLeftPivot.rotation.x = currentDoorLeft;
+
+        currentDoorRight += (targetDoorRight - currentDoorRight) * 0.12;
+        doorRightPivot.rotation.x = currentDoorRight;
+
+        // Camera Transition Lerp
+        if (isCamMoving) {
+          camera.position.lerp(targetCamPos, 0.08);
+          controls.target.lerp(targetCamLook, 0.08);
+          if (camera.position.distanceTo(targetCamPos) < 0.05) isCamMoving = false;
+        }
+
+        // Spark jitter
+        if (sparkLines.visible) {
+          sparkLines.scale.set(1 + (Math.random() - 0.5) * 0.25, 1 + (Math.random() - 0.5) * 0.25, 1);
+        }
+
+        controls.update();
+        renderer.render(scene, camera);
+
+      } catch (err) {
+        console.error("Render loop guard:", err);
+      }
+    }
+
+    animate();
+
+    /* =========================================================================
+       MODAL CONTROLLER (TEAM CREDITS)
+       ========================================================================= */
+    const teamModal = document.getElementById('team-modal');
+    
+
+    function openTeamModal() {
+      if (teamModal) teamModal.classList.add('show');
+    }
+    function closeTeamModal() {
+      if (teamModal) teamModal.classList.remove('show');
+    }
+
+    document.getElementById('btn-open-team')?.addEventListener('click', openTeamModal);
+    document.getElementById('btn-team-inline')?.addEventListener('click', openTeamModal);
+    document.getElementById('btn-close-team')?.addEventListener('click', closeTeamModal);
+
+    // Dynamic Mobile Framing Resize
+    window.addEventListener('resize', () => {
+      const isMobile = window.innerWidth <= 900;
+      camera.fov = isMobile ? 46 : 38;
+      controls.target.set(0, isMobile ? 1.2 : 1.35, 0);
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
